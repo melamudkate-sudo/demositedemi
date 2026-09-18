@@ -6,6 +6,6 @@ const output = path.join(root, 'dist');
 fs.rmSync(output, { recursive: true, force: true });
 fs.mkdirSync(output, { recursive: true });
 for (const entry of ['index.html', '.nojekyll', 'assets']) {
-  fs.cpSync(path.join(root, entry), path.join(output, entry), { recursive: true });
+  fs.cpSync(path.join(root, entry), path.join(output, entry), { recursive: true, filter: source => path.basename(source) !== '.DS_Store' });
 }
 console.log('Site built in dist/');
