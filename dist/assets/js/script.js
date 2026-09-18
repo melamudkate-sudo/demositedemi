@@ -53,7 +53,6 @@ const demiandMotion = (() => {
     positionMorePointer();
     setMoreOpen(open);
   });
-  moreMenu.querySelector('button').addEventListener('click', () => { closeMenus(); moreToggle.focus(); });
   header.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenus));
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
@@ -90,6 +89,8 @@ const demiandMotion = (() => {
   if (appStory) {
     const storyShell = appStory.querySelector('.app-story-shell');
     const storySlides = [...appStory.querySelectorAll('[data-app-slide]')];
+    // Decode the final compositions before their first reveal; hidden PNGs otherwise paint late.
+    appStory.querySelectorAll('.app-mockup img,.app-overview-group img').forEach(image => image.decode().catch(() => {}));
     const storyDots = [...appStory.querySelectorAll('.app-story-pagination button')];
     const storyCount = appStory.querySelector('.app-story-count');
     const storyTitle = appStory.querySelector('.app-story-title');
@@ -106,18 +107,18 @@ const demiandMotion = (() => {
     let activeStoryIndex = 0;
     let storyAnimations = [];
     let storyGeneration = 0;
-    const storyAutoplayDelay = 6500;
+    const storyAutoplayDelay = 6000;
     let storyAutoplayTimer = null;
     let storyAutoplayStarted = 0;
     let storyAutoplayRemaining = storyAutoplayDelay;
     let storyInView = false;
-    let storyPointerInside = false;
     let storyFocusInside = false;
+    let storyPointerInteraction = false;
     let storyDragging = false;
 
     function storyCanAutoplay() {
       return storyInView && document.visibilityState === 'visible' && !reducedMotion.matches &&
-        !storyPointerInside && !storyFocusInside && !storyDragging;
+        !storyFocusInside && !storyDragging;
     }
 
     function clearStoryAutoplayTimer() {
@@ -167,6 +168,7 @@ const demiandMotion = (() => {
       storyAnimations = [];
       storySlides.forEach((slide, index) => {
         const active = index === activeStoryIndex;
+        slide.style.removeProperty('z-index');
         slide.hidden = !active;
         slide.inert = !active;
         slide.classList.toggle('is-active', active);
@@ -175,7 +177,6 @@ const demiandMotion = (() => {
     }
 
     function updateStoryInterface(index) {
-      if (!reducedMotion.matches) storyCount.animate([{transform:'translateY(8px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:demiandMotion.state,easing:demiandMotion.ease});
       storyCount.textContent = `${String(index + 1).padStart(2,'0')} / ${String(storySlides.length).padStart(2,'0')}`;
       storyTitle.textContent = storyTitles[index];
       storyDots.forEach((dot, dotIndex) => {
@@ -216,46 +217,29 @@ const demiandMotion = (() => {
         return;
       }
 
-      const options = { duration:demiandMotion.slide, easing:demiandMotion.ease, fill:'both' };
-      const outCopy = outgoing.querySelector('.app-slide-copy');
-      const inCopy = incoming.querySelector('.app-slide-copy');
-      storyAnimations = [
-        outCopy.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:`${-22*direction}px -8px`}],{...options,duration:340}),
-        inCopy.animate([{opacity:0,translate:`${24*direction}px 12px`,clipPath:'inset(0 0 8% 0)'},{opacity:1,translate:'0 0',clipPath:'inset(0)'}],{...options,delay:80,duration:480})
-      ];
-      outgoing.querySelectorAll('.app-device,.app-overview-group,.app-intelligence-level').forEach((item,i) => {
-        storyAnimations.push(item.animate([{opacity:1,translate:'0 0',scale:1},{opacity:0,translate:`${-38*direction}px -12px`,scale:.96}],{...options,duration:320,delay:Math.min(i,3)*35}));
-      });
-      incoming.querySelectorAll('.app-device,.app-overview-group,.app-intelligence-level').forEach((item,i) => {
-        storyAnimations.push(item.animate([
-          {opacity:0,translate:`${48*direction}px 20px`,scale:.94,rotate:`y ${-8*direction}deg`},
-          {opacity:1,translate:'0 0',scale:1,rotate:'y 0deg'}
-        ],{...options,duration:480,delay:80+Math.min(i,3)*55}));
-      });
-      incoming.querySelectorAll('.app-capability-grid li,.app-step-list li,.app-assistant-request').forEach((item,i) => {
-        storyAnimations.push(item.animate([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0'}],{...options,duration:380,delay:140+Math.min(i,4)*50}));
-      });
-      [outgoing,incoming].forEach((slide,i) => {
-        storyAnimations.push(slide.querySelector('.app-slide-visual').animate(i ? [{opacity:0},{opacity:1}] : [{opacity:1},{opacity:0}],{...options,duration:i?500:340}));
-        slide.querySelectorAll('.app-scene-emblem,.app-scene-circuit,.app-signal-path,.app-generated-path,.app-progress-line,.app-journey-line').forEach((detail,n)=>{
-          storyAnimations.push(detail.animate(i ? [
-            {opacity:0,translate:`${28*direction}px 0`,clipPath:'inset(0 100% 0 0)'},
-            {opacity:1,translate:'0 0',clipPath:'inset(0)'}
-          ] : [{opacity:1,translate:'0 0'},{opacity:0,translate:`${-16*direction}px 0`}],{...options,duration:i?440:280,delay:i?140+n*45:0}));
-        });
-      });
+      // Two overlapping layers per slide; no nested item animation or clipping.
+      const options = { duration:560, easing:demiandMotion.ease, fill:'both' };
+      incoming.style.zIndex = '2'; outgoing.style.zIndex = '1';
+      storyAnimations = [];
+      for (const selector of ['.app-slide-copy', '.app-slide-visual']) {
+        const visual = selector === '.app-slide-visual';
+        storyAnimations.push(outgoing.querySelector(selector).animate([
+          {opacity:1,transform:'translateX(0)'},
+          {opacity:0,transform:`translateX(${-direction*(visual?26:10)}px)`}
+        ],{...options,duration:visual?560:320}));
+        storyAnimations.push(incoming.querySelector(selector).animate([
+          {opacity:0,transform:`translateX(${direction*(visual?34:14)}px)`},
+          {opacity:1,transform:'translateX(0)'}
+        ],{...options,delay:visual?0:70}));
+      }
       const running = [...storyAnimations];
       Promise.all(running.map(animation => animation.finished)).then(() => {
         if (generation !== storyGeneration) return;
-        outgoing.hidden = true;
-        outgoing.inert = true;
-        outgoing.setAttribute('aria-hidden', 'true');
-        incoming.classList.add('is-active');
-        running.forEach(animation => animation.cancel());
-        storyAnimations = [];
+        settleStory();
       }).catch(() => {});
     }
 
+    appStory.addEventListener('pointerdown', () => { storyPointerInteraction = true; storyFocusInside = false; }, {capture:true});
     appStory.querySelector('.app-story-prev').addEventListener('click', () => selectStorySlide(activeStoryIndex - 1, -1));
     appStory.querySelector('.app-story-next').addEventListener('click', () => selectStorySlide(activeStoryIndex + 1, 1));
     storyDots.forEach((dot, index) => dot.addEventListener('click', () => selectStorySlide(index, index > activeStoryIndex ? 1 : -1)));
@@ -263,6 +247,9 @@ const demiandMotion = (() => {
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
       if (event.target.matches('input,select,textarea')) return;
       event.preventDefault();
+      storyPointerInteraction = false;
+      storyFocusInside = true;
+      pauseStoryAutoplay();
       selectStorySlide(activeStoryIndex + (event.key === 'ArrowRight' ? 1 : -1), event.key === 'ArrowRight' ? 1 : -1);
     });
 
@@ -271,10 +258,12 @@ const demiandMotion = (() => {
       if (event.button !== 0 || event.target.closest('button,a')) return;
       dragStart = { x:event.clientX, y:event.clientY, id:event.pointerId };
       storyDragging = true;
+      storyShell.setPointerCapture(event.pointerId);
       pauseStoryAutoplay();
     });
     storyShell.addEventListener('pointerup', event => {
       if (!dragStart || dragStart.id !== event.pointerId) return;
+      if (storyShell.hasPointerCapture(event.pointerId)) storyShell.releasePointerCapture(event.pointerId);
       const distanceX = event.clientX - dragStart.x;
       const distanceY = event.clientY - dragStart.y;
       dragStart = null;
@@ -312,37 +301,15 @@ const demiandMotion = (() => {
     }, { threshold:[0,.45,.75] });
     storyVisibilityObserver.observe(appStory);
 
-    // Pointer-driven depth is scheduled only on input; no continuous render loop.
-    let scenePointerFrame = 0;
-    storyShell.addEventListener('pointermove', event => {
-      if(reducedMotion.matches || !finePointer.matches || storyDragging || innerWidth<=900 || scenePointerFrame) return;
-      scenePointerFrame=requestAnimationFrame(()=>{
-        scenePointerFrame=0;
-        const r=storyShell.getBoundingClientRect();
-        appStory.style.setProperty('--scene-pointer-x',`${((event.clientX-r.left)/r.width-.5)*10}px`);
-        appStory.style.setProperty('--scene-pointer-y',`${((event.clientY-r.top)/r.height-.5)*6}px`);
-      });
-    },{passive:true});
-    storyShell.addEventListener('pointerleave',()=>{
-      appStory.style.setProperty('--scene-pointer-x','0px');
-      appStory.style.setProperty('--scene-pointer-y','0px');
-    });
-
-    appStory.addEventListener('pointerenter', () => {
-      storyPointerInside = true;
-      pauseStoryAutoplay();
-    });
-    appStory.addEventListener('pointerleave', () => {
-      storyPointerInside = false;
-      if (!storyDragging) resumeStoryAutoplay();
-    });
+    document.addEventListener('keydown', () => { storyPointerInteraction = false; }, {capture:true});
     appStory.addEventListener('focusin', () => {
-      storyFocusInside = true;
-      pauseStoryAutoplay();
+      storyFocusInside = !storyPointerInteraction && document.activeElement.matches(':focus-visible');
+      if (storyFocusInside) pauseStoryAutoplay();
     });
     appStory.addEventListener('focusout', () => {
       requestAnimationFrame(() => {
-        storyFocusInside = appStory.contains(document.activeElement);
+        storyFocusInside = !storyPointerInteraction && appStory.contains(document.activeElement);
+        if (!appStory.contains(document.activeElement)) storyPointerInteraction = false;
         if (!storyFocusInside) resumeStoryAutoplay();
       });
     });
@@ -393,21 +360,7 @@ const demiandMotion = (() => {
     entries.forEach(({target,isIntersecting}) => {
       if(!isIntersecting) return;
       target.classList.add('story-entered'); storyObserver.unobserve(target);
-      if(target.id==='smartcook' && !reducedMotion.matches) {
-        const ordered=[
-          [target.querySelector('.app-slide:not([hidden]) h2'),320],
-          [target.querySelector('.app-slide:not([hidden]) .app-slide-lead'),400],
-          [target.querySelector('.app-slide:not([hidden]) .app-slide-visual'),500],
-          [target.querySelector('.app-slide:not([hidden]) .app-scene-emblem'),600],
-          [target.querySelector('.app-slide:not([hidden]) .app-scene-circuit'),620],
-          [target.querySelector('.app-story-progress'),660],
-          [target.querySelector('.app-story-nav-cluster'),660]
-        ];
-        ordered.forEach(([node,delay])=>node?.animate([
-          {opacity:0,translate:'0 18px',clipPath:'inset(0 0 12% 0)'},
-          {opacity:1,translate:'0 0',clipPath:'inset(-80px)'}
-        ],{duration:demiandMotion.chapter,delay,easing:demiandMotion.ease,fill:'backwards'}));
-      }
+
     });
   },{threshold:.12});
   document.querySelectorAll('[data-transition="story"]').forEach(section => storyObserver.observe(section));
@@ -415,6 +368,9 @@ const demiandMotion = (() => {
   if(route) new IntersectionObserver((entries,observer) => {
     if(entries[0].isIntersecting){ route.classList.add('is-revealed'); observer.disconnect(); }
   },{threshold:.5}).observe(route);
+  const ambientObserver = new IntersectionObserver(entries => entries.forEach(({target,isIntersecting}) => target.classList.toggle('is-in-view',isIntersecting)), {threshold:.1});
+  document.querySelectorAll('.viewport-section').forEach(section => ambientObserver.observe(section));
+  document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('tab-hidden',document.hidden));
   const sectionLinks=[...moreMenu.querySelectorAll('a')], visibleSections=new Map();
   const mapObserver=new IntersectionObserver(entries => {
     entries.forEach(entry => visibleSections.set(entry.target,entry));
@@ -427,18 +383,22 @@ const demiandMotion = (() => {
     });
   },{rootMargin:'-72px 0px -25% 0px',threshold:[0,.2,.5,.8]});
   document.querySelectorAll('[data-section]').forEach(section=>mapObserver.observe(section));
+  sectionLinks.forEach(link => link.addEventListener('click', () => {
+    const target = document.querySelector(link.hash);
+    if (target) { target.tabIndex = -1; target.focus({preventScroll:true}); }
+  }));
   moreToggle.addEventListener('keydown',event=>{
     if(event.key==='ArrowDown'){event.preventDefault();setMoreOpen(true);requestAnimationFrame(()=>sectionLinks[0].focus({preventScroll:true}));}
   });
   moreMenu.addEventListener('keydown',event=>{
-    const links=[moreMenu.querySelector('button'),...sectionLinks], index=links.indexOf(document.activeElement);
+    const links=sectionLinks, index=links.indexOf(document.activeElement);
     if(event.key==='Tab'){
       if(event.shiftKey && index===0){event.preventDefault();links.at(-1).focus();}
       else if(!event.shiftKey && index===links.length-1){event.preventDefault();links[0].focus();}
     }
     if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
       event.preventDefault();
-      const next=event.key==='Home'?1:event.key==='End'?links.length-1:(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length;
+      const next=event.key==='Home'?0:event.key==='End'?links.length-1:(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length;
       links[next].focus();
     }
   });
@@ -493,8 +453,12 @@ const demiandMotion = (() => {
       { clipPath:'inset(0)' },
       { clipPath:'inset(0 0 100%)' }
     ], { duration, easing, fill:'both' }));
+    if (section.id === 'smartcook') {
+      animations.push(section.animate([{transform:'translateY(38px)'},{transform:'translateY(0)'}],{duration:850,easing,fill:'both'}));
+      revealChapterContent(section);
+    }
     content.forEach((node, i) => {
-      if (getComputedStyle(node).display === 'contents') return;
+      if (section.id === 'smartcook' || getComputedStyle(node).display === 'contents') return;
       animations.push(node.animate([
         {opacity:0,transform:'translateY(12px)'},
         {opacity:1,transform:'none'}
@@ -582,7 +546,10 @@ const demiandMotion = (() => {
   const stage = document.querySelector('.model-stage');
   const hero = document.querySelector('.hero');
   let dragging = false;
-  const syncMotionPreference = () => model.toggleAttribute('auto-rotate', !reducedMotion.matches);
+  let heroInView = true;
+  const syncMotionPreference = () => model.toggleAttribute('auto-rotate', heroInView && !document.hidden && !reducedMotion.matches);
+  new IntersectionObserver(([entry]) => { heroInView = entry.isIntersecting; syncMotionPreference(); }).observe(hero);
+  document.addEventListener('visibilitychange', syncMotionPreference);
   reducedMotion.addEventListener('change', syncMotionPreference);
   syncMotionPreference();
   model.addEventListener('pointerdown', () => { dragging = true; stage.style.setProperty('--model-ry', '0deg'); });
@@ -603,7 +570,6 @@ const demiandMotion = (() => {
   const form = document.querySelector('.partner-form');
   const partnerEmail = form.dataset.email;
   form.querySelectorAll('input, select').forEach(field => { field.required = true; });
-  form.querySelector('.form-submit small').textContent = 'Prepare an email request. Nothing is sent automatically.';
   form.addEventListener('submit', event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -760,4 +726,28 @@ const demiandMotion = (() => {
   const endDrag = () => { if (!drag) return; if (rail.hasPointerCapture(drag.id)) rail.releasePointerCapture(drag.id); drag = null; rail.classList.remove('dragging'); };
   window.addEventListener('pointerup', endDrag); rail.addEventListener('pointercancel', endDrag);
   rail.addEventListener('click', event => { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } }, true);
+})();
+
+// Set data-video-src on the trigger when the approved production film is ready.
+(() => {
+  const trigger = document.querySelector('.production-video');
+  const dialog = document.querySelector('#production-dialog');
+  if (!trigger || !dialog) return;
+  const video = dialog.querySelector('video');
+  trigger.addEventListener('click', () => {
+    const source = trigger.dataset.videoSrc;
+    if (source && !video.getAttribute('src')) video.src = source;
+    video.hidden = !source;
+    dialog.querySelector('.film-placeholder').hidden = !!source;
+    document.body.classList.add('film-open');
+    dialog.showModal();
+  });
+  dialog.querySelector('.film-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => {
+    const rect = dialog.getBoundingClientRect();
+    if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    video.pause(); document.body.classList.remove('film-open'); trigger.focus({preventScroll:true});
+  });
 })();

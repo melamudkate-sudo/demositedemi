@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "node scripts/serve.cjs",
     "check": "node scripts/check.cjs",
-    "build": "node scripts/check.cjs && node scripts/build.cjs"
+    "build": "node scripts/check.cjs && node scripts/build.cjs",
+    "test:browser": "node scripts/qa.cjs",
+    "test:lifecycle": "node scripts/qa-lifecycle.cjs",
+    "test:refinements": "node scripts/qa-refinements.cjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
