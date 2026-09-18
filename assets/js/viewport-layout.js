@@ -13,9 +13,9 @@
   const cards = [...rail.children];
   cards.forEach(card => card.querySelector('img').draggable = false);
   let step=0, period=0, timer, frame, settleTimer;
-  let visible=false, focused=false, dragging=false, moving=false;
+  let visible=false, hover=false, focused=false, dragging=false, moving=false;
   let startX=0, startScroll=0;
-  const duration = 500;
+  const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-visual')) || 900;
   const stop = () => { clearTimeout(timer); timer=null; };
   function normalize() {
     if (!period || moving || dragging) return;
@@ -24,8 +24,8 @@
   }
   function schedule() {
     stop();
-    if (visible && !focused && !dragging && !moving && !reduced.matches && !document.hidden)
-      timer=setTimeout(() => advance(1),500);
+    if (visible && !hover && !focused && !dragging && !moving && !reduced.matches && !document.hidden)
+      timer=setTimeout(() => advance(1),3000);
   }
   function cancelMove() {
     cancelAnimationFrame(frame); moving=false; rail.classList.remove('is-moving'); stop();
@@ -56,11 +56,13 @@
   }
   new ResizeObserver(measure).observe(rail);
   new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(!visible)cancelMove();schedule();},{threshold:.2}).observe(rail);
-  rail.addEventListener('focusin',()=>{focused=rail.matches(':focus-visible');if(focused)cancelMove();});
+  rail.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'){hover=true;stop();}});
+  rail.addEventListener('pointerleave',()=>{hover=false;schedule();});
+  rail.addEventListener('focusin',()=>{focused=true;stop();});
   rail.addEventListener('focusout',()=>requestAnimationFrame(()=>{focused=rail.contains(document.activeElement);schedule();}));
   rail.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
-    focused=true;event.preventDefault();advance(event.key==='ArrowRight'?1:-1);
+    event.preventDefault();advance(event.key==='ArrowRight'?1:-1);
   });
   rail.addEventListener('wheel',()=>{cancelMove();clearTimeout(settleTimer);settleTimer=setTimeout(()=>{normalize();schedule();},180);},{passive:true});
   rail.addEventListener('scroll',()=>{
@@ -68,8 +70,8 @@
     clearTimeout(settleTimer);settleTimer=setTimeout(()=>{normalize();schedule();},140);
   },{passive:true});
   rail.addEventListener('pointerdown',event=>{
-    focused=false;cancelMove();
-    if(event.button!==0)return;
+    cancelMove();
+    if(event.pointerType!=='mouse'||event.button!==0)return;
     dragging=true;startX=event.clientX;startScroll=rail.scrollLeft;
     rail.classList.add('is-dragging');rail.setPointerCapture(event.pointerId);event.preventDefault();
   });
