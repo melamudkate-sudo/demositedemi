@@ -589,14 +589,22 @@ const demiandMotion = (() => {
     { label: 'Silver', swatch: '#b7bbc3' },
     { label: 'Slate', swatch: '#8c929d' }
   ];
-  const models = (items, singular) => items.map(([sku, colorCount]) => ({
+  const models = (items, singular) => items.map(([sku, colorCount, commercial]) => ({
     name: `${singular} / ${sku}`,
-    colors: colors.slice(0, colorCount)
+    colors: colors.slice(0, colorCount),
+    ...(commercial || {})
   }));
   const catalog = {
     'air-fryers': {
-      title: 'AIR FRYERS', image: 'assets/images/catalog-airfryer-2700.png', photoAlt: 'DEMIAND DK-2700 air fryer',
-      models: models([['DK-2400', 3], ['DK-2200', 3], ['DK-5100', 3], ['DK-2500', 2], ['DK-2700', 2], ['DK-5000', 2], ['DK-5300', 2]], 'AIR FRYER')
+      title: 'AIR FRYERS', image: 'assets/images/catalog-airfryer-2700.png', photoAlt: 'DEMIAND DK-2700 air fryer', launch: true,
+      models: models([
+        ['DK-2500', 2, { tier:'ENTRY', rrp:'$119', capacity:'6L', features:'Wi-Fi · compact · first purchase', role:'Acquisition / lowest price point' }],
+        ['DK-2700', 2, { tier:'CORE', rrp:'$169', capacity:'10L', features:'Wi-Fi · large basket · window UX', role:'Mainstream family volume' }],
+        ['DK-2400', 3, { tier:'HERO', rrp:'$183', capacity:'9L', features:'Wi-Fi · steam · 2 heaters · metal', role:'Clear differentiation / upgrade' }],
+        ['DK-2100', 3, { tier:'PREMIUM FAMILY', rrp:'$249', capacity:'14L / dual bowl', features:'Wi-Fi · two bowls · family / multi-dish', role:'Premium family scenario / higher ASP' }],
+        ['DK-5100', 3, { tier:'TECH FLAGSHIP', rrp:'$270', capacity:'7L', features:'Wi-Fi · steam · 2 heaters · 5 fan speeds', role:'Technology flagship / brand image' }],
+        ['DK-2200', 3], ['DK-5000', 2], ['DK-5300', 2]
+      ], 'AIR FRYER')
     },
     'coffee-makers': {
       title: 'COFFEE MAKERS', image: 'assets/images/catalog-coffee-3500.png', photoAlt: 'DEMIAND KF-3500 coffee maker',
@@ -615,6 +623,7 @@ const demiandMotion = (() => {
   const rail = section.querySelector('.catalog-rail');
   const title = section.querySelector('#catalog-title');
   const count = section.querySelector('#catalog-count');
+  const ladder = section.querySelector('#catalog-ladder');
   const anchor = section.querySelector('.catalog-anchor');
   const back = section.querySelector('.catalog-back');
   const prev = section.querySelector('.catalog-prev');
@@ -638,6 +647,18 @@ const demiandMotion = (() => {
       image.width = 2500; image.height = 2000; image.draggable = false; image.decoding = 'async';
       frame.append(image);
       const name = document.createElement('h3'); name.textContent = model.name;
+      let commercial;
+      if (model.tier) {
+        card.classList.add('is-recommended');
+        const badge = document.createElement('span'); badge.className = 'catalog-recommended'; badge.textContent = 'RECOMMENDED LAUNCH';
+        frame.append(badge);
+        commercial = document.createElement('div'); commercial.className = 'catalog-commercial';
+        const tier = document.createElement('strong'); tier.textContent = model.tier;
+        const price = document.createElement('span'); price.textContent = `REF. RRP ${model.rrp} · ${model.capacity}`;
+        const features = document.createElement('span'); features.textContent = model.features;
+        const role = document.createElement('small'); role.textContent = `ROLE: ${model.role}`;
+        commercial.append(tier, price, features, role);
+      }
       const swatches = document.createElement('div'); swatches.className = 'catalog-swatches'; swatches.setAttribute('role', 'group'); swatches.setAttribute('aria-label', `${model.name}: illustrative color options`);
       model.colors.forEach((color, i) => {
         const button = document.createElement('button'); button.type = 'button'; button.style.setProperty('--swatch', color.swatch);
@@ -648,7 +669,7 @@ const demiandMotion = (() => {
         });
         swatches.append(button);
       });
-      card.append(frame, name, swatches); rail.append(card);
+      card.append(frame, name); if (commercial) card.append(commercial); card.append(swatches); rail.append(card);
     });
   }
   function update() {
@@ -671,7 +692,7 @@ const demiandMotion = (() => {
     const source = button.querySelector('img');
     const from = source.getBoundingClientRect();
     const data = catalog[button.dataset.category];
-    title.textContent = data.title; count.textContent = `${pad(data.models.length)} MODELS`;
+    title.textContent = data.title; count.textContent = `${pad(data.models.length)} MODELS`; ladder.hidden = !data.launch;
     anchor.replaceChildren(source.cloneNode());
     render(data);
     if (!reducedMotion.matches) {
