@@ -751,6 +751,7 @@ html { scroll-behavior:auto; }
 .support-capabilities p { margin-top:8px; font-size:18px; }
 .ownership-journey { position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:24px 0 10px; padding:0; list-style:none; }
 .ownership-journey li { position:relative; padding:14px 34px 14px 16px; border:1px solid #d0d5dd; border-radius:var(--radius-media); background:#ffffff80; }
+<<<<<<< HEAD
 .ownership-journey li>svg { position:absolute; top:13px; right:16px; width:25px; height:25px; fill:none; stroke:#7d8592; stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; }
 .ownership-journey li:not(:last-child)::after { content:'→'; position:absolute; right:-12px; top:50%; z-index:1; translate:0 -50%; color:var(--red); font-size:18px; }
 .ownership-journey b,.ownership-journey span { display:block; }
@@ -758,6 +759,13 @@ html { scroll-behavior:auto; }
 .ownership-journey span { margin-top:5px; font-size:15px; }
 .ownership-ready { display:flex; flex-wrap:wrap; gap:6px; color:#626b78; }
 .ownership-ready span { padding:5px 9px; border:1px solid #d0d5dd; border-radius:999px; background:#ffffff70; font-size:12px; line-height:1.2; }
+=======
+.ownership-journey li:not(:last-child)::after { content:'→'; position:absolute; right:-12px; top:50%; z-index:1; translate:0 -50%; color:var(--red); font-size:18px; }
+.ownership-journey b,.ownership-journey span { display:block; }
+.ownership-journey b { color:var(--red); font-size:11px; letter-spacing:.09em; }
+.ownership-journey span { margin-top:5px; font-size:13px; }
+.ownership-ready { color:#626b78; font-size:11px; letter-spacing:.025em; }
+>>>>>>> 0e5d1d16e04724788799e27fab68192429f621bd
 .after-sales .support-backbone { margin-top:24px; padding-top:24px; }
 @media(max-width:700px) {
 .support-backbone { grid-template-columns:1fr; gap:40px; margin-top:28px; }
@@ -766,10 +774,13 @@ html { scroll-behavior:auto; }
 .ownership-journey { grid-template-columns:1fr 1fr; gap:10px; }
 .ownership-journey li:not(:last-child)::after { display:none; }
 .after-sales .support-backbone { margin-top:20px; padding-top:20px; }
+<<<<<<< HEAD
 }
 @media(min-width:1001px) and (max-height:680px) {
 .ownership-journey { margin:16px 0 8px; }
 .after-sales .support-backbone { margin-top:16px; padding-top:18px; }
+=======
+>>>>>>> 0e5d1d16e04724788799e27fab68192429f621bd
 }
 
 /* Content choreography follows the section surface transition. */
