@@ -39,7 +39,7 @@ const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS
  await jump('portfolio');
  for(let c=0;c<3;c++){
   await page.locator('.product-card').nth(c).click();await page.waitForTimeout(80);
-  assert.equal(await page.locator('.catalog-card').count(),[7,3,2][c]);
+  assert.equal(await page.locator('.catalog-card').count(),[8,3,2][c]);
   const choices=page.locator('.catalog-card').first().locator('.catalog-swatches button');
   for(let i=0;i<await choices.count();i++){await choices.nth(i).click();assert.equal(await choices.nth(i).getAttribute('aria-pressed'),'true')}
   if(await page.locator('.catalog-next').isEnabled()){await page.locator('.catalog-next').click();await page.waitForTimeout(60);await page.locator('.catalog-prev').click();}
