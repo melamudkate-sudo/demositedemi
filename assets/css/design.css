@@ -135,13 +135,10 @@ section[hidden], [hidden] {
   overflow: visible;
   border-top: 1px solid var(--line);
 }
-/* Two section transitions; geometry is independent of animation. */
+/* Chapter geometry stays independent of entrance motion. */
 .viewport-section[data-transition] { isolation:isolate; border-top:0; }
 .viewport-section[data-transition="wipe"] { border-radius:0; margin-top:0; }
 .viewport-section[data-transition="layered"] { border-radius:var(--radius-chapter) var(--radius-chapter) 0 0; margin-top:0; padding-top:var(--y); }
-.chapter-surface { position:absolute; inset:0; border-radius:inherit; pointer-events:none; }
-.chapter-surface { z-index:-2; transform-origin:top center; }
-[data-transition="layered"]>.chapter-surface { box-shadow:none; }
 
 .viewport-section h2 {
   font-size: clamp(34px,4.2vw,68px);
@@ -779,26 +776,21 @@ html { scroll-behavior:auto; }
 .after-sales .support-backbone { margin-top:16px; padding-top:18px; }
 }
 
-/* Content choreography follows the section surface transition. */
+/* Three repeatable entrances, driven by the existing reveal observer. */
 @media(prefers-reduced-motion:no-preference) {
-  h2.reveal { clip-path:inset(0 0 100%); transform:translateY(18px); transition:clip-path var(--motion-chapter) var(--ease),transform var(--motion-chapter) var(--ease),opacity var(--motion-chapter); }
-  h2.reveal.visible { clip-path:inset(0); transform:none; }
-  .production-film.reveal { transform:scale(.94); clip-path:inset(8% 3% round 8px); transition:transform var(--motion-chapter) var(--ease),clip-path var(--motion-chapter) var(--ease),opacity var(--motion-chapter); }
-  .production-film.reveal.visible { transform:none; clip-path:inset(0 round 8px); }
+  .reveal[data-reveal] { transition:opacity var(--motion-chapter) var(--ease),transform var(--motion-chapter) var(--ease); }
+  .reveal[data-reveal="chapter"] { transform:translateY(8px); }
+  .reveal[data-reveal="copy"] { transform:translateY(18px); transition-delay:var(--motion-stagger); }
+  .reveal[data-reveal="system"] { transform:translateY(24px); transition-duration:var(--motion-visual); transition-delay:calc(2 * var(--motion-stagger)); }
+  .reveal[data-reveal].visible { transform:none; }
   .support-backbone.visible::before { animation:system-line var(--motion-chapter) var(--ease) both; }
-  .support-backbone.visible .warranty-statement { animation:statement-open var(--motion-chapter) var(--motion-micro) var(--ease) both; }
-  .support-backbone.visible .support-capabilities article { animation:capability-open var(--motion-chapter) var(--ease) both; }
-  .support-backbone.visible .support-capabilities article:nth-child(1) { animation-delay:.45s; }
-  .support-backbone.visible .support-capabilities article:nth-child(2) { animation-delay:.6s; }
-  .support-backbone.visible .support-capabilities article:nth-child(3) { animation-delay:.75s; }
-  .support-backbone.visible .support-capabilities article::before { animation:service-pulse var(--motion-chapter) var(--motion-chapter) both; }
 }
 @keyframes system-line { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-@keyframes statement-open { from { clip-path:inset(0 0 100%); transform:translateY(18px); } to { clip-path:inset(0); transform:none; } }
+@keyframes statement-open { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
 @keyframes capability-open { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
 @keyframes service-pulse { 0%,100% { box-shadow:0 0 0 0 #ef001b00; } 45% { box-shadow:0 0 0 7px #ef001b14; } }
 
-/* 06 — Capabilities orbit one connected product, not four separate cards. */
+/* 07 — Capabilities orbit one connected product, not four separate cards. */
 .ecosystem-system { position:relative; display:grid; grid-template-columns:1fr 1.1fr 1fr; grid-template-rows:1fr 1fr; column-gap:48px; row-gap:38px; min-height:0; padding:12px 0; }
 .ecosystem-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; fill:none; stroke:#c1c7d1; stroke-width:1; vector-effect:non-scaling-stroke; }
 .ecosystem-lines path { stroke:var(--red); stroke-opacity:.2; stroke-dasharray:1; }
@@ -852,18 +844,6 @@ html { scroll-behavior:auto; }
 #manufacturing .production-photo { display:block; width:100%; height:clamp(300px,40dvh,460px); object-fit:cover; object-position:center 48%; }
 
 #manufacturing .production-film figcaption { z-index:1; }
-@media(prefers-reduced-motion:no-preference) {
- [data-transition="story"] .reveal { transition:opacity var(--motion-chapter) var(--ease),transform var(--motion-chapter) var(--ease),clip-path var(--motion-chapter) var(--ease); transform:translateY(14px); }
- [data-transition="story"] .reveal.visible { opacity:1; transform:none; clip-path:inset(0); }
- [data-transition="story"] .section-label { transition-delay:0ms; }
- [data-transition="story"] h2.reveal { transition-delay:80ms; }
- [data-transition="story"] p.reveal { transition-delay:150ms; }
- [data-transition="story"] .production-film.reveal { clip-path:none; transform:translateY(12px); transition:opacity 850ms var(--ease),transform 850ms var(--ease); transition-delay:80ms; }
- [data-transition="story"] .production-film.reveal.visible { clip-path:none; transform:none; }
- [data-transition="story"] .app-story-shell.reveal { clip-path:none; transition-delay:160ms; }
-
-}
-@keyframes product-arrive { from { opacity:0; translate:30px 18px; scale:.96; } to { opacity:1; translate:0 0; scale:1; } }
 
 
 /* Desktop viewport is a ceiling. Editorial chapters follow their content. */

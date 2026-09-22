@@ -90,7 +90,12 @@ const demiandMotion = (() => {
     const storyShell = appStory.querySelector('.app-story-shell');
     const storySlides = [...appStory.querySelectorAll('[data-app-slide]')];
     // Decode the final compositions before their first reveal; hidden PNGs otherwise paint late.
-    appStory.querySelectorAll('.app-mockup img,.app-overview-group img').forEach(image => image.decode().catch(() => {}));
+    const appMediaObserver = new IntersectionObserver((entries, observer) => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      appStory.querySelectorAll('.app-mockup img,.app-overview-group img').forEach(image => image.decode().catch(() => {}));
+      observer.disconnect();
+    }, { rootMargin:'1200px 0px' });
+    appMediaObserver.observe(appStory);
     const storyDots = [...appStory.querySelectorAll('.app-story-pagination button')];
     const storyCount = appStory.querySelector('.app-story-count');
     const storyTitle = appStory.querySelector('.app-story-title');
@@ -399,107 +404,34 @@ const demiandMotion = (() => {
     }
   });
 
-  // Scroll-triggered surfaces: exactly two mechanics, with no layout animation.
-  const sections = [...document.querySelectorAll('.viewport-section')];
-  const sectionBackgrounds = sections.map(section => {
-    const style = getComputedStyle(section);
-    return style.backgroundImage === 'none' && style.backgroundColor === 'rgba(0, 0, 0, 0)'
-      ? getComputedStyle(document.body).background : style.background;
+  // One entrance observer: chapter labels, copy, and grouped systems share CSS tokens.
+  // Group existing small reveals to avoid nested animations and excessive staggering.
+  document.querySelectorAll('.chapter-heading,.products,.benefit-grid,.manufacturing-metrics,.network-proof,.contact-top,.contact-intro,.contact-main').forEach(group => {
+    group.querySelectorAll('.reveal').forEach(node => node.classList.remove('reveal'));
+    group.classList.add('reveal');
   });
-  const chapterStates = new Map(sections.filter(section => section.dataset.transition && section.dataset.transition !== 'story').map(section => [section, 'pending']));
-  const activeChapters = new Map();
-  const contentAllowed = node => {
-    const state = chapterStates.get(node.closest('.viewport-section'));
-    return !state || state === 'content' || state === 'complete';
-  };
-  function revealChapterContent(section) {
-    chapterStates.set(section, 'content');
-    section.querySelectorAll('.reveal').forEach(node => {
-      const rect = node.getBoundingClientRect();
-      if (rect.top < innerHeight && rect.bottom > 0) node.classList.add('visible');
-    });
-  }
-  function enterChapter(section) {
-    if (chapterStates.get(section) !== 'pending') return;
-    const rect = section.getBoundingClientRect();
-    // Direct anchor navigation and fast scrolling always show the destination immediately.
-    if (reducedMotion.matches || rect.top < innerHeight * .4) {
-      revealChapterContent(section);
-      chapterStates.set(section, 'complete');
-      return;
-    }
-    chapterStates.set(section, 'surface');
-    const index = sections.indexOf(section);
-    const layered = section.dataset.transition === 'layered';
-    const surface = document.createElement('div');
-    surface.className = 'chapter-surface';
-    surface.setAttribute('aria-hidden', 'true');
-    surface.style.background = layered ? sectionBackgrounds[index] : sectionBackgrounds[index - 1];
-    const content = [...section.children];
-    section.prepend(surface);
-    const radius = getComputedStyle(section).borderTopLeftRadius;
-    const duration = demiandMotion.chapter;
-    const contentDelay = demiandMotion.micro;
-    const easing = demiandMotion.ease;
-    const animations = [];
-    animations.push(surface.animate(layered ? [
-      { transform:`translateY(28px) scaleY(${(rect.height - 28) / rect.height})`, clipPath:`inset(5% 0 0 round ${radius} ${radius} 0 0)`, opacity:.35 },
-      { transform:'none', clipPath:`inset(0 round ${radius} ${radius} 0 0)`, opacity:1 }
-    ] : [
-      { clipPath:'inset(0)' },
-      { clipPath:'inset(0 0 100%)' }
-    ], { duration, easing, fill:'both' }));
-    if (section.id === 'smartcook') {
-      animations.push(section.animate([{transform:'translateY(38px)'},{transform:'translateY(0)'}],{duration:850,easing,fill:'both'}));
-      revealChapterContent(section);
-    }
-    content.forEach((node, i) => {
-      if (section.id === 'smartcook' || getComputedStyle(node).display === 'contents') return;
-      animations.push(node.animate([
-        {opacity:0,transform:'translateY(12px)'},
-        {opacity:1,transform:'none'}
-      ], {duration:demiandMotion.state,delay:contentDelay + Math.min(i * 20,60),easing,fill:'backwards'}));
-    });
-    const contentTimer = setTimeout(() => revealChapterContent(section), contentDelay);
-    let finished = false;
-    function finish() {
-      if (finished) return;
-      finished = true;
-      clearTimeout(contentTimer);
-      animations.forEach(animation => animation.cancel());
-      surface.remove();
-      revealChapterContent(section);
-      chapterStates.set(section, 'complete');
-      activeChapters.delete(section);
-    }
-    activeChapters.set(section, finish);
-    Promise.all(animations.map(animation => animation.finished)).then(finish).catch(() => {});
-  }
-  const chapterObserver = new IntersectionObserver(entries => {
+  const revealNodes = [...document.querySelectorAll('.reveal')];
+  const revealObserver = new IntersectionObserver(entries => {
     entries.forEach(({target, isIntersecting}) => {
       if (!isIntersecting) return;
-      enterChapter(target);
-      chapterObserver.unobserve(target);
+      target.classList.add('visible');
+      revealObserver.unobserve(target);
     });
-  }, {rootMargin:'0px 0px 100px 0px',threshold:0});
-  chapterStates.forEach((_, section) => chapterObserver.observe(section));
+  }, { threshold:0, rootMargin:'0px 0px -3% 0px' });
+  revealNodes.forEach(node => {
+    if (!node.closest('.hero')) {
+      node.dataset.reveal = node.matches('.section-label,.contact-top') ? 'chapter'
+        : node.matches('.chapter-heading,.app-story-chapter,.contact-intro,h2,p') ? 'copy' : 'system';
+    }
+    if (reducedMotion.matches) node.classList.add('visible');
+    else revealObserver.observe(node);
+  });
   reducedMotion.addEventListener('change', () => {
-    if (reducedMotion.matches) activeChapters.forEach(finish => finish());
+    if (!reducedMotion.matches) return;
+    revealNodes.forEach(node => node.classList.add('visible'));
+    revealObserver.disconnect();
   });
 
-  const revealObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting || !contentAllowed(entry.target)) return;
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
-    });
-  }, { threshold: .06, rootMargin: '0px 0px -3% 0px' });
-  document.querySelectorAll('.reveal').forEach(node => revealObserver.observe(node));
-  document.querySelectorAll('.products,.benefit-grid,.manufacturing-metrics').forEach(group => {
-    [...group.children].forEach((node, index) => {
-      node.style.transitionDelay = Math.min(index * demiandMotion.stagger, demiandMotion.stagger * 3) + 'ms';
-    });
-  });
   const counterObserver = new IntersectionObserver(entries => {
     entries.forEach(({target, isIntersecting}) => {
       if (!isIntersecting) return;
@@ -522,14 +454,7 @@ const demiandMotion = (() => {
   let scrollQueued = false;
   function updateScroll() {
     scrollQueued = false;
-    activeChapters.forEach((finish, section) => {
-      if (section.getBoundingClientRect().top < innerHeight * .35) finish();
-    });
     header.classList.toggle('scrolled', scrollY > 24);
-    document.querySelectorAll('.reveal:not(.visible)').forEach(node => {
-      const rect = node.getBoundingClientRect();
-      if (contentAllowed(node) && rect.top < innerHeight * .97 && rect.bottom > 0 && rect.left < innerWidth && rect.right > 0) node.classList.add('visible');
-    });
 
   }
   addEventListener('scroll', () => {
