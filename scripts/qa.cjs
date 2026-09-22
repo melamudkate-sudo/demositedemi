@@ -6,7 +6,7 @@ const path = require('node:path');
 const base = process.env.QA_URL || 'http://127.0.0.1:4175/';
 const output = process.env.QA_OUTPUT || '/tmp/demiand-final-qa';
 fs.mkdirSync(output,{recursive:true});
-const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS) : [[1920,1080],[1440,900],[1366,768],[1280,720],[1280,640],[768,1024],[390,844],[320,568]];
+const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS) : [[1920,1080],[1600,900],[1440,900],[1366,768],[1280,720],[1280,640],[768,1024],[390,844],[320,568]];
 (async()=>{
  const browser=await (process.env.QA_ENGINE === 'webkit' ? webkit : chromium).launch();
  const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});

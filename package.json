@@ -9,7 +9,8 @@
     "build": "node scripts/check.cjs && node scripts/build.cjs",
     "test:browser": "node scripts/qa.cjs",
     "test:lifecycle": "node scripts/qa-lifecycle.cjs",
-    "test:refinements": "node scripts/qa-refinements.cjs"
+    "test:refinements": "node scripts/qa-refinements.cjs",
+    "test:content-motion": "node scripts/qa-content-motion.cjs"
   },
   "engines": {
     "node": ">=20"

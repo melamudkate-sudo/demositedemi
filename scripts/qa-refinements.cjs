@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});await p.goto(process.env.QA_URL||'http://127.0.0.1:4175/',{waitUntil:'networkidle'});
-for(const [width,height] of [[1920,1080],[1440,900],[1280,640],[390,844],[320,568]]){
+for(const [width,height] of [[1920,1080],[1600,900],[1440,900],[1366,768],[1280,640],[768,1024],[390,844],[320,568]]){
  await p.setViewportSize({width,height});
  const sizes=await p.locator('.chapter-title').evaluateAll(es=>es.map(e=>getComputedStyle(e).fontSize));assert.equal(sizes.length,11);assert.equal(new Set(sizes).size,1,`${width} chapter headings`);
  const families=await p.locator('.chapter-title').evaluateAll(es=>es.map(e=>getComputedStyle(e).fontFamily));assert.equal(new Set(families).size,1);

@@ -35,7 +35,7 @@
 @keyframes nav-sheen { 0% { opacity:0; background-position:140% 0; } 30% { opacity:1; } 100% { opacity:0; background-position:-40% 0; } }
 .menu-toggle { display:none; }
 .section-menu {
-  position:absolute; right:var(--x); top:calc(100% + 12px);
+  position:absolute; z-index:2; right:var(--x); top:calc(100% + 12px);
   width:clamp(920px,72vw,1220px); max-width:calc(100vw - 2 * var(--x));
   max-height:calc(100dvh - var(--navbar-height) - 36px); overflow:auto; padding:20px 22px 22px; border:1px solid #cdd0da; border-radius:var(--radius-glass);
   background:radial-gradient(ellipse at 18% 0%,#fceff35c,transparent 45%),linear-gradient(135deg,#f3f3f7f7,#e7eaf0f2);

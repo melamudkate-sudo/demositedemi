@@ -116,6 +116,7 @@ npm run dev
 npm run test:browser
 npm run test:lifecycle
 npm run test:refinements
+npm run test:content-motion
 ```
 
 Скрипт принимает `QA_URL`, `QA_OUTPUT`, `QA_ENGINE=webkit` и

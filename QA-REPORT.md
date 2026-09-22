@@ -1,55 +1,30 @@
-# Final Production Pass — validation record
+# Production corrections — 2026-09-22
 
-Base: current `main` at `613054f437b0d29f768338ccd134ce61e8f450bd` (V13).
+Repository: `melamudkate-sudo/demositedemi`, branch `main`.
+Starting commit: `464d4d9fa65600312e7b98014b475f5617f914c8`.
 
-## Implemented
+## Changes
 
-- Section sequence 01–14, retained anchors, manufacturing photographs at 07 and production capacity at 10.
-- Rounded glass More menu; removed Close safely; keyboard wrap, Home/End, Escape, outside click and item selection.
-- Balanced five-node commercial route and staged activation.
-- Manufacturing loop: 500 ms movement + 500 ms dwell, hover continues, focus/drag/visibility/reduced-motion pauses.
-- All seven supplied PNGs copied unchanged; original overview retained; no synthetic device frames.
-- Nine app compositions, dedicated red side controls, 6-second timer, full-image contain sizing and inactive-slide inert state.
-- Unified cool pearl, graphite, red, champagne and glass; Safari backdrop-filter prefixes.
-- App and hero offscreen motion management; race-safe transition settlement.
-- GitHub Pages workflow and pull-request build check; relative assets; generated dist and OS metadata excluded from Git.
+1. Removed Commercial Model, its menu entry, dedicated styles and observer. Top-level chapters and menu now run 01–13; component numbering stays unchanged.
+2. Replaced Cooking Performance photography with the four approved validation stages and 100+ proof point. Removed the carousel, clones, autoplay, associated CSS and `viewport-layout.js`.
+3. Added the approved warranty and partner-support paragraphs. The <0.87% defect rate is explicitly labeled as internal statistics; ownership and support elements remain.
+4. Consolidated entrance motion around the existing reveal observer and tokens, with chapter, copy and grouped-system patterns. Removed duplicate section animations and per-scroll reveal geometry scans. Preserved reduced motion, app controls/autoplay, catalogue, 3D, tabs and contact. Deferred app decoding until approach; the fixed-size Connected Ecosystem image uses native lazy loading. Corrected slide 09 spacing at 1600×900 without changing copy.
+5. Added persistent content/motion and mobile-menu checks; added 1600×900 to the default browser suite and expanded refinement viewports. Fixed the More menu stacking order so primary-navigation CTA text cannot cover or intercept tablet/mobile chapter links.
 
-## Completed browser checks
+## Validation
 
-Chromium: 1920×1080, 1440×900, 1366×768, 1280×720, 1280×640,
-768×1024, 390×844 and 320×568. All 14 sections and nine app slides passed
-geometry checks; zero uncaught JavaScript errors and zero HTTP asset failures.
-Menu keyboard/outside/item behavior, catalogue categories/swatches, four market tabs,
-app navigation/drag/autoplay/loop/focus/reduced motion, manufacturing loop, terms
-and email-draft form passed. Lifecycle checks passed hidden-tab pause/resume,
-rapid reversal, captured drag release and offscreen 3D handling.
+- `git diff --check`: PASS.
+- `npm run check`: PASS after each correction; validates assets, anchors, interaction targets, syntax, thirteen chapter/menu pairs and independent app pagination.
+- `npm run build`: PASS after each correction. Tracked `dist/` regenerated exclusively by the build script.
+- `npm run test:browser`: PASS at 1366×768, 1440×900, 1600×900, 1920×1080, 768×1024, 390×844 and 320×568; also 1280×720 and 1280×640. All thirteen sections and nine app slides fit their bounds; no horizontal page overflow, uncaught JavaScript errors or HTTP asset failures.
+- `npm run test:lifecycle`: PASS for hidden-tab pause/resume, rapid slide reversal, captured drag release and offscreen 3D rotation. Observed CLS below 0.006 across final local runs.
+- `npm run test:refinements`: PASS for heading parity, compact desktop sections and video modal keyboard, backdrop, close and focus restoration.
+- `npm run test:content-motion`: PASS; verifies chapter/menu correspondence, removed carousel hooks, cooking and warranty content, native scrolling, all chapter entrances, runtime reduced-motion switching, responsive menu keyboard focus and sequence layout at all seven requested sizes.
+- Existing installed Playwright/Chromium runtime used; no dependencies installed.
+- Desktop and narrow mobile screenshots of the edited sections inspected, plus catalogue, market, app, production, map, terms and contact views.
 
-## Final refinements
+## Deployment and limits
 
-- Content-led section heights; full-screen opening and contact closing composition.
-- Uniform Montserrat heading scale for 02–13; matching larger 01/14 titles.
-- Upper-right slide counter; simpler overlapping slide layers, no pointer tracking.
-- White section 08 and cool pearl section 09 with a layered scroll entrance.
-- Removed animated Distributor background; clean caption rows and restrained hero motifs.
-- Enlarged manufacturing metrics and corrected heading width.
-- Production film modal is a deliberate placeholder until an approved source is supplied.
-- Contact form has a partnership desk, two-row fields and info@demiand.com.
-- More level, less cropped initial 3D camera and softer shadow.
-- Final right-aligned subtitles share the title's top edge; new approved subtitle copy at 03/12.
+GitHub Pages is configured to publish `/` from `main` (legacy branch deployment), verified through the GitHub API. Each correction is committed and pushed independently, and its remote SHA checked before proceeding. The final deployment is checked after the QA commit; its exact SHA and production verification are recorded in the task delivery report.
 
-The full eight-viewport run preceded only the final subtitle alignment. That last
-revision was built and checked separately with the focused heading/modal/layout suite.
-
-## Remaining limitations
-
-- Native Safari/WebKit was not run; only Chromium is installed in the available browser runtime.
-- Contact prepares a mailto draft; there is no backend/CRM delivery.
-- Catalogue uses one reference photograph per category; swatches do not swap product photos.
-- Google Fonts and model-viewer depend on external services; original GLB is approximately 19 MB.
-- No GitHub push or deployment was performed.
-
-## Resume validation
-
-Run `npm run dev`, then `npm run test:browser` and `npm run test:lifecycle`.
-Use `PLAYWRIGHT_MODULE` for an existing shared Playwright installation and `QA_URL` for a custom port.
-Screenshots/results default to `/tmp/demiand-final-qa`; they are not shipped with the site.
+Safari/WebKit and real-device testing were not run. The production film remains the existing approved-source placeholder. The contact form prepares an email draft; no message was sent. Catalogue color swatches retain their existing behavior and reference photos. Fonts and the model-viewer component remain externally hosted.
