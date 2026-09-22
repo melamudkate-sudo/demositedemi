@@ -102,9 +102,9 @@ const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS
  await page.locator('.app-story-shell').focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(6600);assert.equal(await page.locator('#smartcook').getAttribute('data-active-slide'),'3','keyboard focus pauses autoplay');
  await page.locator('.nav-sections').focus();await page.waitForTimeout(6500);assert.equal(await page.locator('#smartcook').getAttribute('data-active-slide'),'4','focus exit resumes');
  await page.emulateMedia({reducedMotion:'reduce'});const before=await page.locator('#smartcook').getAttribute('data-active-slide');await page.waitForTimeout(6500);assert.equal(await page.locator('#smartcook').getAttribute('data-active-slide'),before);
- await page.emulateMedia({reducedMotion:'no-preference'});await jump('manufacturing-proof');await page.mouse.move(800,350);await page.waitForTimeout(1600);const rail=page.locator('.manufacturing-proof-rail');const first=await rail.evaluate(e=>e.scrollLeft);await page.waitForTimeout(1100);const second=await rail.evaluate(e=>e.scrollLeft);assert.notEqual(first,second,'manufacturing advances while hovered');
- await rail.focus();await page.waitForTimeout(300);const paused=await rail.evaluate(e=>e.scrollLeft);await page.waitForTimeout(1500);assert.equal(await rail.evaluate(e=>e.scrollLeft),paused,'gallery focus pause');await page.keyboard.press('ArrowRight');await page.waitForTimeout(600);assert.notEqual(await rail.evaluate(e=>e.scrollLeft),paused);
- await page.locator('.nav-sections').focus();await page.waitForTimeout(8000);assert.ok(await rail.evaluate(e=>e.scrollLeft>0&&e.scrollLeft<e.scrollWidth-e.clientWidth),'seamless loop remains on runway');
+ await jump('manufacturing-proof');
+ assert.equal(await page.locator('.validation-pipeline > li').count(),4);
+ assert.equal(await page.locator('#manufacturing-proof img, .manufacturing-proof-rail, [data-clone]').count(),0);
  assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);
  fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({engine:process.env.QA_ENGINE||'chromium',viewports:results,errors,missing,interactions:'PASS'},null,2));
  console.log(JSON.stringify({viewports:results,errors,missing,interactions:'PASS'}));await browser.close();
