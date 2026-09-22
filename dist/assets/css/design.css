@@ -740,15 +740,18 @@ html { scroll-behavior:auto; }
 }
 .after-sales { background:#eceef0; }
 .after-sales::before { content:'SUPPORT'; position:absolute; bottom:28px; left:var(--x); font:700 clamp(90px,18vw,320px)/1.2 var(--display); letter-spacing:-.07em; opacity:.05; pointer-events:none; z-index:-1; }
-.support-backbone { position:relative; display:grid; grid-template-columns:1.2fr 1fr; gap:70px; margin:40px 0 30px; padding-top:40px; }
+.support-backbone { position:relative; display:grid; grid-template-columns:1fr 1.55fr .8fr; gap:36px; margin:24px 0 0; padding-top:24px; }
 .support-backbone::before { content:''; position:absolute; inset:0 0 auto; height:1px; background:linear-gradient(90deg,var(--red),#aeb3ba 65%); transform-origin:left; }
-.warranty-statement strong { display:block; font:600 clamp(100px,12vw,190px)/.95 var(--display); letter-spacing:-.065em; white-space:nowrap; }
-.warranty-statement>span { display:block; margin-top:20px; font-size:28px; color:var(--copy); }
-.support-capabilities { display:grid; gap:26px; }
+.warranty-statement h3 { font-size:20px; letter-spacing:.02em; }
+.warranty-statement strong { display:block; margin-top:24px; font:600 clamp(48px,5.2vw,84px)/1 var(--display); letter-spacing:-.065em; white-space:nowrap; color:var(--red); }
+.warranty-statement>span { display:block; max-width:220px; margin-top:12px; font-size:11px; line-height:1.6; letter-spacing:.08em; color:var(--copy); }
+.warranty-copy p { font-size:15px; line-height:1.6; }
+.warranty-copy p+p { margin-top:14px; }
+.support-capabilities { display:grid; gap:20px; align-content:start; }
 .support-capabilities article { position:relative; padding-left:24px; }
 .support-capabilities article::before { content:''; position:absolute; left:0; top:8px; width:7px; height:7px; border-radius:50%; background:var(--red); }
-.support-capabilities h3 { font-size:24px; }
-.support-capabilities p { margin-top:8px; font-size:18px; }
+.support-capabilities h3 { font-size:18px; }
+.support-capabilities p { margin-top:6px; font-size:15px; }
 .ownership-journey { position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:24px 0 10px; padding:0; list-style:none; }
 .ownership-journey li { position:relative; padding:14px 34px 14px 16px; border:1px solid #d0d5dd; border-radius:var(--radius-media); background:#ffffff80; }
 .ownership-journey li>svg { position:absolute; top:13px; right:16px; width:25px; height:25px; fill:none; stroke:#7d8592; stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; }
@@ -759,9 +762,13 @@ html { scroll-behavior:auto; }
 .ownership-ready { display:flex; flex-wrap:wrap; gap:6px; color:#626b78; }
 .ownership-ready span { padding:5px 9px; border:1px solid #d0d5dd; border-radius:999px; background:#ffffff70; font-size:12px; line-height:1.2; }
 .after-sales .support-backbone { margin-top:24px; padding-top:24px; }
+@media(min-width:701px) and (max-width:1000px) {
+.support-backbone { grid-template-columns:1fr 1.5fr; gap:28px; }
+.support-capabilities { grid-column:1/-1; grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
 @media(max-width:700px) {
 .support-backbone { grid-template-columns:1fr; gap:40px; margin-top:28px; }
-.warranty-statement strong { font-size:clamp(78px,18vw,120px); }
+.warranty-statement strong { font-size:64px; }
 .after-sales::before { font-size:18vw; }
 .ownership-journey { grid-template-columns:1fr 1fr; gap:10px; }
 .ownership-journey li:not(:last-child)::after { display:none; }
