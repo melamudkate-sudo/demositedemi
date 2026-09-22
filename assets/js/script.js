@@ -364,10 +364,6 @@ const demiandMotion = (() => {
     });
   },{threshold:.12});
   document.querySelectorAll('[data-transition="story"]').forEach(section => storyObserver.observe(section));
-  const route = document.querySelector('.commercial-route');
-  if(route) new IntersectionObserver((entries,observer) => {
-    if(entries[0].isIntersecting){ route.classList.add('is-revealed'); observer.disconnect(); }
-  },{threshold:.5}).observe(route);
   const ambientObserver = new IntersectionObserver(entries => entries.forEach(({target,isIntersecting}) => target.classList.toggle('is-in-view',isIntersecting)), {threshold:.1});
   document.querySelectorAll('.viewport-section').forEach(section => ambientObserver.observe(section));
   document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('tab-hidden',document.hidden));

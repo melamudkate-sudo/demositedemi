@@ -16,8 +16,8 @@ const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS
  await page.goto(base,{waitUntil:'networkidle'});
  await page.evaluate(()=>document.fonts.ready);
  const numbers=await page.locator('[data-section]').evaluateAll(es=>es.map(e=>e.dataset.section));
- assert.deepEqual(numbers,Array.from({length:14},(_,i)=>String(i+1).padStart(2,'0')));
- assert.equal(await page.locator('.section-menu-grid a').count(),14);
+ assert.deepEqual(numbers,Array.from({length:13},(_,i)=>String(i+1).padStart(2,'0')));
+ assert.equal(await page.locator('.section-menu-grid a').count(),13);
  assert.equal(await page.locator('.section-menu-head button').count(),0);
  const jump=async id=>{await page.locator('#'+id).evaluate(e=>e.scrollIntoView({behavior:'instant'}));await page.waitForTimeout(100)};
  const shots=async name=>page.screenshot({path:path.join(output,name+'.png')});
@@ -59,7 +59,7 @@ const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS
   const layout=await page.evaluate(()=>({horizontal:document.documentElement.scrollWidth>innerWidth,sections:[...document.querySelectorAll('.viewport-section')].map(s=>({id:s.id,height:s.getBoundingClientRect().height}))}));
   assert.equal(layout.horizontal,false,`${width} page overflow`);
   if(width>1000)for(const s of layout.sections)assert.ok(s.height<=(s.id==='hero'?height:height-72)+1,`${width} ${s.id} height ${s.height}`);
-  for(const id of ['hero','portfolio','potential','advantages','demand','commercial','manufacturing-proof','technology','manufacturing','after-sales','global','terms','contact']){
+  for(const id of ['hero','portfolio','potential','advantages','demand','manufacturing-proof','technology','manufacturing','after-sales','global','terms','contact']){
    await jump(id);
    const clipped=await page.locator('#'+id).evaluate(s=>{
     const r=s.getBoundingClientRect();return [...s.querySelectorAll('h1,h2,h3,p,li,dt,dd,.contact-bottom')].filter(e=>!e.closest('[hidden],[data-clone],details:not([open]),.catalog-rail')).filter(e=>{const t=e.getBoundingClientRect();return t.width&&t.height&&(t.top<r.top-2||t.bottom>r.bottom+2)}).map(e=>e.textContent.slice(0,50));
@@ -82,7 +82,7 @@ const viewports = process.env.QA_VIEWPORTS ? JSON.parse(process.env.QA_VIEWPORTS
    if(width===1440||width===1280&&height===640||width===390)await shots(`${width}x${height}-slide-${i+1}`);
   }
   console.log('Viewport PASS',width,height);
-  results.push({width,height,sections:14,slides:9,status:'PASS'});
+  results.push({width,height,sections:13,slides:9,status:'PASS'});
  }
  await page.setViewportSize({width:1440,height:900});await jump('smartcook');
  await page.locator('.app-story-next').click();assert.equal(await page.locator('#smartcook').getAttribute('data-active-slide'),'0');
