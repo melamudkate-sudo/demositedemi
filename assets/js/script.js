@@ -90,7 +90,12 @@ const demiandMotion = (() => {
     const storyShell = appStory.querySelector('.app-story-shell');
     const storySlides = [...appStory.querySelectorAll('[data-app-slide]')];
     // Decode the final compositions before their first reveal; hidden PNGs otherwise paint late.
-    appStory.querySelectorAll('.app-mockup img,.app-overview-group img').forEach(image => image.decode().catch(() => {}));
+    const appMediaObserver = new IntersectionObserver((entries, observer) => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      appStory.querySelectorAll('.app-mockup img,.app-overview-group img').forEach(image => image.decode().catch(() => {}));
+      observer.disconnect();
+    }, { rootMargin:'1200px 0px' });
+    appMediaObserver.observe(appStory);
     const storyDots = [...appStory.querySelectorAll('.app-story-pagination button')];
     const storyCount = appStory.querySelector('.app-story-count');
     const storyTitle = appStory.querySelector('.app-story-title');
@@ -364,10 +369,6 @@ const demiandMotion = (() => {
     });
   },{threshold:.12});
   document.querySelectorAll('[data-transition="story"]').forEach(section => storyObserver.observe(section));
-  const route = document.querySelector('.commercial-route');
-  if(route) new IntersectionObserver((entries,observer) => {
-    if(entries[0].isIntersecting){ route.classList.add('is-revealed'); observer.disconnect(); }
-  },{threshold:.5}).observe(route);
   const ambientObserver = new IntersectionObserver(entries => entries.forEach(({target,isIntersecting}) => target.classList.toggle('is-in-view',isIntersecting)), {threshold:.1});
   document.querySelectorAll('.viewport-section').forEach(section => ambientObserver.observe(section));
   document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('tab-hidden',document.hidden));
@@ -403,107 +404,34 @@ const demiandMotion = (() => {
     }
   });
 
-  // Scroll-triggered surfaces: exactly two mechanics, with no layout animation.
-  const sections = [...document.querySelectorAll('.viewport-section')];
-  const sectionBackgrounds = sections.map(section => {
-    const style = getComputedStyle(section);
-    return style.backgroundImage === 'none' && style.backgroundColor === 'rgba(0, 0, 0, 0)'
-      ? getComputedStyle(document.body).background : style.background;
+  // One entrance observer: chapter labels, copy, and grouped systems share CSS tokens.
+  // Group existing small reveals to avoid nested animations and excessive staggering.
+  document.querySelectorAll('.chapter-heading,.products,.benefit-grid,.manufacturing-metrics,.network-proof,.contact-top,.contact-intro,.contact-main').forEach(group => {
+    group.querySelectorAll('.reveal').forEach(node => node.classList.remove('reveal'));
+    group.classList.add('reveal');
   });
-  const chapterStates = new Map(sections.filter(section => section.dataset.transition && section.dataset.transition !== 'story').map(section => [section, 'pending']));
-  const activeChapters = new Map();
-  const contentAllowed = node => {
-    const state = chapterStates.get(node.closest('.viewport-section'));
-    return !state || state === 'content' || state === 'complete';
-  };
-  function revealChapterContent(section) {
-    chapterStates.set(section, 'content');
-    section.querySelectorAll('.reveal').forEach(node => {
-      const rect = node.getBoundingClientRect();
-      if (rect.top < innerHeight && rect.bottom > 0) node.classList.add('visible');
-    });
-  }
-  function enterChapter(section) {
-    if (chapterStates.get(section) !== 'pending') return;
-    const rect = section.getBoundingClientRect();
-    // Direct anchor navigation and fast scrolling always show the destination immediately.
-    if (reducedMotion.matches || rect.top < innerHeight * .4) {
-      revealChapterContent(section);
-      chapterStates.set(section, 'complete');
-      return;
-    }
-    chapterStates.set(section, 'surface');
-    const index = sections.indexOf(section);
-    const layered = section.dataset.transition === 'layered';
-    const surface = document.createElement('div');
-    surface.className = 'chapter-surface';
-    surface.setAttribute('aria-hidden', 'true');
-    surface.style.background = layered ? sectionBackgrounds[index] : sectionBackgrounds[index - 1];
-    const content = [...section.children];
-    section.prepend(surface);
-    const radius = getComputedStyle(section).borderTopLeftRadius;
-    const duration = demiandMotion.chapter;
-    const contentDelay = demiandMotion.micro;
-    const easing = demiandMotion.ease;
-    const animations = [];
-    animations.push(surface.animate(layered ? [
-      { transform:`translateY(28px) scaleY(${(rect.height - 28) / rect.height})`, clipPath:`inset(5% 0 0 round ${radius} ${radius} 0 0)`, opacity:.35 },
-      { transform:'none', clipPath:`inset(0 round ${radius} ${radius} 0 0)`, opacity:1 }
-    ] : [
-      { clipPath:'inset(0)' },
-      { clipPath:'inset(0 0 100%)' }
-    ], { duration, easing, fill:'both' }));
-    if (section.id === 'smartcook') {
-      animations.push(section.animate([{transform:'translateY(38px)'},{transform:'translateY(0)'}],{duration:850,easing,fill:'both'}));
-      revealChapterContent(section);
-    }
-    content.forEach((node, i) => {
-      if (section.id === 'smartcook' || getComputedStyle(node).display === 'contents') return;
-      animations.push(node.animate([
-        {opacity:0,transform:'translateY(12px)'},
-        {opacity:1,transform:'none'}
-      ], {duration:demiandMotion.state,delay:contentDelay + Math.min(i * 20,60),easing,fill:'backwards'}));
-    });
-    const contentTimer = setTimeout(() => revealChapterContent(section), contentDelay);
-    let finished = false;
-    function finish() {
-      if (finished) return;
-      finished = true;
-      clearTimeout(contentTimer);
-      animations.forEach(animation => animation.cancel());
-      surface.remove();
-      revealChapterContent(section);
-      chapterStates.set(section, 'complete');
-      activeChapters.delete(section);
-    }
-    activeChapters.set(section, finish);
-    Promise.all(animations.map(animation => animation.finished)).then(finish).catch(() => {});
-  }
-  const chapterObserver = new IntersectionObserver(entries => {
+  const revealNodes = [...document.querySelectorAll('.reveal')];
+  const revealObserver = new IntersectionObserver(entries => {
     entries.forEach(({target, isIntersecting}) => {
       if (!isIntersecting) return;
-      enterChapter(target);
-      chapterObserver.unobserve(target);
+      target.classList.add('visible');
+      revealObserver.unobserve(target);
     });
-  }, {rootMargin:'0px 0px 100px 0px',threshold:0});
-  chapterStates.forEach((_, section) => chapterObserver.observe(section));
+  }, { threshold:0, rootMargin:'0px 0px -3% 0px' });
+  revealNodes.forEach(node => {
+    if (!node.closest('.hero')) {
+      node.dataset.reveal = node.matches('.section-label,.contact-top') ? 'chapter'
+        : node.matches('.chapter-heading,.app-story-chapter,.contact-intro,h2,p') ? 'copy' : 'system';
+    }
+    if (reducedMotion.matches) node.classList.add('visible');
+    else revealObserver.observe(node);
+  });
   reducedMotion.addEventListener('change', () => {
-    if (reducedMotion.matches) activeChapters.forEach(finish => finish());
+    if (!reducedMotion.matches) return;
+    revealNodes.forEach(node => node.classList.add('visible'));
+    revealObserver.disconnect();
   });
 
-  const revealObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting || !contentAllowed(entry.target)) return;
-      entry.target.classList.add('visible');
-      revealObserver.unobserve(entry.target);
-    });
-  }, { threshold: .06, rootMargin: '0px 0px -3% 0px' });
-  document.querySelectorAll('.reveal').forEach(node => revealObserver.observe(node));
-  document.querySelectorAll('.products,.benefit-grid,.manufacturing-metrics').forEach(group => {
-    [...group.children].forEach((node, index) => {
-      node.style.transitionDelay = Math.min(index * demiandMotion.stagger, demiandMotion.stagger * 3) + 'ms';
-    });
-  });
   const counterObserver = new IntersectionObserver(entries => {
     entries.forEach(({target, isIntersecting}) => {
       if (!isIntersecting) return;
@@ -526,14 +454,7 @@ const demiandMotion = (() => {
   let scrollQueued = false;
   function updateScroll() {
     scrollQueued = false;
-    activeChapters.forEach((finish, section) => {
-      if (section.getBoundingClientRect().top < innerHeight * .35) finish();
-    });
     header.classList.toggle('scrolled', scrollY > 24);
-    document.querySelectorAll('.reveal:not(.visible)').forEach(node => {
-      const rect = node.getBoundingClientRect();
-      if (contentAllowed(node) && rect.top < innerHeight * .97 && rect.bottom > 0 && rect.left < innerWidth && rect.right > 0) node.classList.add('visible');
-    });
 
   }
   addEventListener('scroll', () => {
@@ -589,20 +510,16 @@ const demiandMotion = (() => {
     { label: 'Silver', swatch: '#b7bbc3' },
     { label: 'Slate', swatch: '#8c929d' }
   ];
-  const models = (items, singular) => items.map(([sku, colorCount, commercial]) => ({
+  const models = (items, singular) => items.map(([sku, colorCount]) => ({
     name: `${singular} / ${sku}`,
-    colors: colors.slice(0, colorCount),
-    ...(commercial || {})
+    colors: colors.slice(0, colorCount)
   }));
   const catalog = {
     'air-fryers': {
-      title: 'AIR FRYERS', image: 'assets/images/catalog-airfryer-2700.png', photoAlt: 'DEMIAND DK-2700 air fryer', launch: true,
+      title: 'AIR FRYERS', image: 'assets/images/catalog-airfryer-2700.png', photoAlt: 'DEMIAND DK-2700 air fryer',
       models: models([
-        ['DK-2500', 2, { tier:'ENTRY', rrp:'$119', capacity:'6L', features:'Wi-Fi · compact · first purchase', role:'Acquisition / lowest price point' }],
-        ['DK-2700', 2, { tier:'CORE', rrp:'$169', capacity:'10L', features:'Wi-Fi · large basket · window UX', role:'Mainstream family volume' }],
-        ['DK-2400', 3, { tier:'HERO', rrp:'$183', capacity:'9L', features:'Wi-Fi · steam · 2 heaters · metal', role:'Clear differentiation / upgrade' }],
-        ['DK-2100', 3, { tier:'PREMIUM FAMILY', rrp:'$249', capacity:'14L / dual bowl', features:'Wi-Fi · two bowls · family / multi-dish', role:'Premium family scenario / higher ASP' }],
-        ['DK-5100', 3, { tier:'TECH FLAGSHIP', rrp:'$270', capacity:'7L', features:'Wi-Fi · steam · 2 heaters · 5 fan speeds', role:'Technology flagship / brand image' }],
+        ['DK-2500', 2], ['DK-2700', 2], ['DK-2400', 3],
+        ['DK-2100', 3], ['DK-5100', 3],
         ['DK-2200', 3], ['DK-5000', 2], ['DK-5300', 2]
       ], 'AIR FRYER')
     },
@@ -623,7 +540,6 @@ const demiandMotion = (() => {
   const rail = section.querySelector('.catalog-rail');
   const title = section.querySelector('#catalog-title');
   const count = section.querySelector('#catalog-count');
-  const ladder = section.querySelector('#catalog-ladder');
   const anchor = section.querySelector('.catalog-anchor');
   const back = section.querySelector('.catalog-back');
   const prev = section.querySelector('.catalog-prev');
@@ -647,18 +563,6 @@ const demiandMotion = (() => {
       image.width = 2500; image.height = 2000; image.draggable = false; image.decoding = 'async';
       frame.append(image);
       const name = document.createElement('h3'); name.textContent = model.name;
-      let commercial;
-      if (model.tier) {
-        card.classList.add('is-recommended');
-        const badge = document.createElement('span'); badge.className = 'catalog-recommended'; badge.textContent = 'RECOMMENDED LAUNCH';
-        frame.append(badge);
-        commercial = document.createElement('div'); commercial.className = 'catalog-commercial';
-        const tier = document.createElement('strong'); tier.textContent = model.tier;
-        const price = document.createElement('span'); price.textContent = `REF. RRP ${model.rrp} · ${model.capacity}`;
-        const features = document.createElement('span'); features.textContent = model.features;
-        const role = document.createElement('small'); role.textContent = `ROLE: ${model.role}`;
-        commercial.append(tier, price, features, role);
-      }
       const swatches = document.createElement('div'); swatches.className = 'catalog-swatches'; swatches.setAttribute('role', 'group'); swatches.setAttribute('aria-label', `${model.name}: illustrative color options`);
       model.colors.forEach((color, i) => {
         const button = document.createElement('button'); button.type = 'button'; button.style.setProperty('--swatch', color.swatch);
@@ -669,7 +573,7 @@ const demiandMotion = (() => {
         });
         swatches.append(button);
       });
-      card.append(frame, name); if (commercial) card.append(commercial); card.append(swatches); rail.append(card);
+      card.append(frame, name, swatches); rail.append(card);
     });
   }
   function update() {
@@ -692,7 +596,7 @@ const demiandMotion = (() => {
     const source = button.querySelector('img');
     const from = source.getBoundingClientRect();
     const data = catalog[button.dataset.category];
-    title.textContent = data.title; count.textContent = `${pad(data.models.length)} MODELS`; ladder.hidden = !data.launch;
+    title.textContent = data.title; count.textContent = `${pad(data.models.length)} MODELS`;
     anchor.replaceChildren(source.cloneNode());
     render(data);
     if (!reducedMotion.matches) {
@@ -747,6 +651,63 @@ const demiandMotion = (() => {
   const endDrag = () => { if (!drag) return; if (rail.hasPointerCapture(drag.id)) rail.releasePointerCapture(drag.id); drag = null; rail.classList.remove('dragging'); };
   window.addEventListener('pointerup', endDrag); rail.addEventListener('pointercancel', endDrag);
   rail.addEventListener('click', event => { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } }, true);
+})();
+
+// Four marketing previews. Add a repository-relative data-video-src to each
+// article when its approved film arrives; until then the artwork stays explicit.
+(() => {
+  const carousel = document.querySelector('.marketing-carousel');
+  if (!carousel) return;
+  const slides = [...carousel.querySelectorAll('[data-marketing-slide]')];
+  const buttons = [...carousel.querySelectorAll('.marketing-pagination button')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let current = 0, animation;
+  function select(index, direction = 1) {
+    const next = (index + slides.length) % slides.length;
+    if (next === current) return;
+    animation?.cancel();
+    slides[current].querySelector('video')?.pause();
+    current = next;
+    slides.forEach((slide, i) => { slide.hidden = i !== current; });
+    buttons.forEach((button, i) => {
+      if (i === current) button.setAttribute('aria-current', 'true');
+      else button.removeAttribute('aria-current');
+    });
+    carousel.querySelector('.marketing-status').textContent = `Video ${current + 1} of ${slides.length}`;
+    if (!reduced.matches) animation = slides[current].animate([
+      { opacity:0, transform:`translateX(${direction * 22}px) scale(.985)` },
+      { opacity:1, transform:'none' }
+    ], { duration:demiandMotion.state, easing:demiandMotion.ease });
+  }
+  carousel.querySelector('.marketing-prev').addEventListener('click', () => select(current - 1, -1));
+  carousel.querySelector('.marketing-next').addEventListener('click', () => select(current + 1));
+  buttons.forEach((button, index) => button.addEventListener('click', () => select(index, index > current ? 1 : -1)));
+  carousel.addEventListener('keydown', event => {
+    if (event.target.closest('video')) return;
+    const actions = { ArrowRight:current + 1, ArrowLeft:current - 1, Home:0, End:slides.length - 1 };
+    if (!(event.key in actions)) return;
+    event.preventDefault(); select(actions[event.key], event.key === 'ArrowLeft' ? -1 : 1);
+  });
+  let start;
+  const screen = carousel.querySelector('.marketing-screen');
+  screen.addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse') start = {x:event.clientX,y:event.clientY}; });
+  screen.addEventListener('pointerup', event => {
+    if (!start) return;
+    const x = event.clientX - start.x, y = event.clientY - start.y;
+    if (Math.abs(x) > 45 && Math.abs(x) > Math.abs(y)) select(current + (x < 0 ? 1 : -1), x < 0 ? 1 : -1);
+    start = null;
+  });
+  screen.addEventListener('pointercancel', () => { start = null; });
+  reduced.addEventListener('change', () => { if (reduced.matches) animation?.cancel(); });
+  slides.forEach(slide => {
+    if (!slide.dataset.videoSrc) return;
+    const video = document.createElement('video');
+    video.src = slide.dataset.videoSrc; video.controls = true; video.playsInline = true; video.preload = 'none';
+    video.poster = slide.querySelector('.marketing-product').src;
+    slide.querySelector('.marketing-product').hidden = true;
+    slide.querySelector('.marketing-video-caption').hidden = true;
+    slide.append(video);
+  });
 })();
 
 // Set data-video-src on the trigger when the approved production film is ready.
