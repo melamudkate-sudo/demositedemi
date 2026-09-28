@@ -1,5 +1,23 @@
 # Marketing support — 2026-09-28
 
+## Catalog follow-up — uniform cards
+
+At the user's request, removed the recommended-launch badges, Entry/Core/etc.
+tiers, reference prices, added specifications/commercial roles and the header's
+value ladder. Removed their data/render branches and dedicated CSS rather than
+hiding them. All eight air-fryer models remain, including DK-2100, with the same
+image/name/color structure and image size as the previous final three cards.
+Coffee-maker and blender content, existing reference photos and navigation remain.
+
+`qa-catalog.cjs`: PASS at 1366×768, 1440×900, 1920×1080, 390×844 and 320×568.
+Checks all 13 models across three categories, equal card/image dimensions,
+absence of removed content, arrows, End-key navigation, all color choices
+including the four-option blender, back navigation and no page overflow or JS
+errors. First/last desktop cards and mobile composition visually inspected.
+Build and Pages-ready folder refreshed after the change.
+
+## Marketing implementation
+
 Repository: `melamudkate-sudo/demositedemi`, branch `distributor-content-update`.
 Started from current `main` at `f29e278ea57365d2dab5d470abd3c8bc8d7bf9c0`.
 

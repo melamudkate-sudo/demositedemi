@@ -11,7 +11,8 @@
     "test:lifecycle": "node scripts/qa-lifecycle.cjs",
     "test:refinements": "node scripts/qa-refinements.cjs",
     "test:content-motion": "node scripts/qa-content-motion.cjs",
-    "test:marketing": "node scripts/qa-marketing.cjs"
+    "test:marketing": "node scripts/qa-marketing.cjs",
+    "test:catalog": "node scripts/qa-catalog.cjs"
   },
   "engines": {
     "node": ">=20"
