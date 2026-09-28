@@ -32,6 +32,10 @@ Started from current `main` at `f29e278ea57365d2dab5d470abd3c8bc8d7bf9c0`.
 - Content/motion suite: PASS at seven desktop/tablet/mobile sizes, including
   all 14 menu entries, section entrances and runtime reduced motion.
 - Desktop and mobile screenshots inspected, including all four card states.
+- Follow-up composition refinement: widened the copy column, reduced the actual
+  gap to the Reels card and added hero-inspired horizontal lines, a perspective
+  grid and warm ambient glow. Re-ran all seven marketing viewport checks; heights,
+  9:16 ratio and stable controls remain unchanged, with no horizontal overflow.
 
 Real video playback and Safari were not tested; approved video files are still
 pending by request. The existing four launch-kit choices are not present in this
