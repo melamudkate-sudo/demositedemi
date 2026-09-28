@@ -1,4 +1,47 @@
-# Production corrections — 2026-09-22
+# Marketing support — 2026-09-28
+
+Repository: `melamudkate-sudo/demositedemi`, branch `distributor-content-update`.
+Started from current `main` at `f29e278ea57365d2dab5d470abd3c8bc8d7bf9c0`.
+
+- Added one marketing-support chapter after Proven Market Demand. Existing chapters
+  now run 01–14; the app keeps its independent nine-slide pagination.
+- Brand slide figures: 11B+ annual views, 192K+ content assets, 2K+ creator
+  collaborations, 21M+ annual post clicks. No invented reporting year.
+- Exactly four explicitly requested video placeholders, in 9:16 Reels format.
+  Per-video views/likes match the user's September 28 figures. No external embeds
+  or unapproved videos were added. Artwork comes from existing site assets.
+- Arrow, pagination, keyboard and touch controls; fixed frame geometry, transition
+  cancellation and reduced-motion support. Future video files use local paths.
+- Every build refreshes the local GitHub-ready export as well as tracked `dist/`.
+  Export contains all 36 runtime files, verified byte-for-byte against `dist/`.
+
+## Current verification
+
+- `npm run build` and `git diff --check`: PASS.
+- Browser regression suite: PASS at 1366×768, 1440×900, 1920×1080, 1280×640 and
+  390×844. Catalogue, market tabs, all app slides, navigation and terms pass;
+  no JavaScript errors or failed HTTP assets.
+- Marketing suite: PASS at those sizes plus 768×1024 and 320×568. All four
+  supplied metric pairs match; the frame stays 9:16 and section height does not
+  change when navigating. Desktop section heights: 665, 724, 724 and 566px
+  respectively, all within the viewport minus the navigation bar.
+- The same marketing checks pass on `/dist/`, exercising repository-subpath
+  relative asset URLs as used by GitHub Pages.
+- Heading/refinement suite: PASS, including typography parity and production
+  dialog keyboard, dismissal and focus restoration.
+- Content/motion suite: PASS at seven desktop/tablet/mobile sizes, including
+  all 14 menu entries, section entrances and runtime reduced motion.
+- Desktop and mobile screenshots inspected, including all four card states.
+
+Real video playback and Safari were not tested; approved video files are still
+pending by request. The existing four launch-kit choices are not present in this
+current main implementation, so no unrelated launch-kit controls were added.
+The form remains an email-draft workflow. Main and the live Pages deployment were
+not modified for this update; the recoverable work is on the working branch.
+
+---
+
+# Production corrections — 2026-09-22 (previous baseline)
 
 Repository: `melamudkate-sudo/demositedemi`, branch `main`.
 Starting commit: `464d4d9fa65600312e7b98014b475f5617f914c8`.
