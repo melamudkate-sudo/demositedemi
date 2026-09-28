@@ -721,7 +721,6 @@ const demiandMotion = (() => {
     const video = document.createElement('video');
     video.src = slide.dataset.videoSrc; video.controls = true; video.playsInline = true; video.preload = 'none';
     video.poster = slide.querySelector('.marketing-product').src;
-    video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#121318';
     slide.querySelector('.marketing-product').hidden = true;
     slide.querySelector('.marketing-video-caption').hidden = true;
     slide.append(video);
