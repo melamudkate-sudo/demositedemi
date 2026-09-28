@@ -670,6 +670,64 @@ const demiandMotion = (() => {
   rail.addEventListener('click', event => { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } }, true);
 })();
 
+// Four marketing previews. Add a repository-relative data-video-src to each
+// article when its approved film arrives; until then the artwork stays explicit.
+(() => {
+  const carousel = document.querySelector('.marketing-carousel');
+  if (!carousel) return;
+  const slides = [...carousel.querySelectorAll('[data-marketing-slide]')];
+  const buttons = [...carousel.querySelectorAll('.marketing-pagination button')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let current = 0, animation;
+  function select(index, direction = 1) {
+    const next = (index + slides.length) % slides.length;
+    if (next === current) return;
+    animation?.cancel();
+    slides[current].querySelector('video')?.pause();
+    current = next;
+    slides.forEach((slide, i) => { slide.hidden = i !== current; });
+    buttons.forEach((button, i) => {
+      if (i === current) button.setAttribute('aria-current', 'true');
+      else button.removeAttribute('aria-current');
+    });
+    carousel.querySelector('.marketing-status').textContent = `Video ${current + 1} of ${slides.length}`;
+    if (!reduced.matches) animation = slides[current].animate([
+      { opacity:0, transform:`translateX(${direction * 22}px) scale(.985)` },
+      { opacity:1, transform:'none' }
+    ], { duration:demiandMotion.state, easing:demiandMotion.ease });
+  }
+  carousel.querySelector('.marketing-prev').addEventListener('click', () => select(current - 1, -1));
+  carousel.querySelector('.marketing-next').addEventListener('click', () => select(current + 1));
+  buttons.forEach((button, index) => button.addEventListener('click', () => select(index, index > current ? 1 : -1)));
+  carousel.addEventListener('keydown', event => {
+    if (event.target.closest('video')) return;
+    const actions = { ArrowRight:current + 1, ArrowLeft:current - 1, Home:0, End:slides.length - 1 };
+    if (!(event.key in actions)) return;
+    event.preventDefault(); select(actions[event.key], event.key === 'ArrowLeft' ? -1 : 1);
+  });
+  let start;
+  const screen = carousel.querySelector('.marketing-screen');
+  screen.addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse') start = {x:event.clientX,y:event.clientY}; });
+  screen.addEventListener('pointerup', event => {
+    if (!start) return;
+    const x = event.clientX - start.x, y = event.clientY - start.y;
+    if (Math.abs(x) > 45 && Math.abs(x) > Math.abs(y)) select(current + (x < 0 ? 1 : -1), x < 0 ? 1 : -1);
+    start = null;
+  });
+  screen.addEventListener('pointercancel', () => { start = null; });
+  reduced.addEventListener('change', () => { if (reduced.matches) animation?.cancel(); });
+  slides.forEach(slide => {
+    if (!slide.dataset.videoSrc) return;
+    const video = document.createElement('video');
+    video.src = slide.dataset.videoSrc; video.controls = true; video.playsInline = true; video.preload = 'none';
+    video.poster = slide.querySelector('.marketing-product').src;
+    video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#121318';
+    slide.querySelector('.marketing-product').hidden = true;
+    slide.querySelector('.marketing-video-caption').hidden = true;
+    slide.append(video);
+  });
+})();
+
 // Set data-video-src on the trigger when the approved production film is ready.
 (() => {
   const trigger = document.querySelector('.production-video');

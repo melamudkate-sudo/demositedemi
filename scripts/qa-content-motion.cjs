@@ -13,7 +13,7 @@ const viewports=[[1366,768],[1440,900],[1600,900],[1920,1080],[768,1024],[390,84
  const chapters=await page.locator('[data-section]').evaluateAll(es=>es.map(e=>({id:e.id,number:e.dataset.section})));
  const menu=await page.locator('.section-menu-grid a').evaluateAll(es=>es.map(e=>({id:e.hash.slice(1),number:e.querySelector('b').textContent})));
  assert.deepEqual(menu,chapters);
- assert.equal(chapters.length,13);
+ assert.equal(chapters.length,14);
  assert.equal(await page.locator('#commercial,[href="#commercial"],.manufacturing-proof-rail,[data-clone],script[src*="viewport-layout"]').count(),0);
  assert.equal(await page.locator('#manufacturing-proof img').count(),0);
  assert.equal(await page.locator('.validation-pipeline > li').count(),4);
@@ -64,6 +64,6 @@ const viewports=[[1366,768],[1440,900],[1600,900],[1920,1080],[768,1024],[390,84
  }
  assert.equal(await page.locator('.chapter-surface').count(),0);
  assert.deepEqual(errors,[]);
- console.log('PASS 13 chapter/menu pairs, cooking sequence, warranty, native scroll, entrances, reduced motion, clean console');
+ console.log('PASS 14 chapter/menu pairs, cooking sequence, warranty, native scroll, entrances, reduced motion, clean console');
  await browser.close();
 })().catch(error=>{console.error(error);process.exit(1);});

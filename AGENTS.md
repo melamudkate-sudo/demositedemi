@@ -11,7 +11,7 @@ replace old rules instead of stacking override files.
 - `assets/js/script.js`: interactions, motion and email draft form.
 - `dist/`: tracked build output; regenerate with `npm run build`, never edit manually.
 - Production: `melamudkate-sudo/demositedemi`, GitHub Pages from `main` at `/`.
-- Thirteen top-level sections; Cooking Performance is 06, Ownership + After-Sales is 10.
+- Fourteen top-level sections; Marketing Support is 06, Cooking Performance is 07, Ownership + After-Sales is 11.
 - Keep the app story’s independent 01–09 pagination unchanged.
 
 Run `npm run build` after changes. Test responsive composition, menu keyboard
